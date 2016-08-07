@@ -24,6 +24,7 @@
 ## 创建自定义指令
 
 一个Angular指令可以有四种表现形式：
+
 1. 作为一个新的HTML元素（`<date-picker></date-picker>`）
 2. 作为元素的属性（`<input input='text' date-picker/>`）
 3. 作为CSS class（`<input type='text' class='date-picker'/>`）
