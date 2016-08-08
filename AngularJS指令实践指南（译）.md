@@ -1,4 +1,4 @@
-# AngularJs 指令实践指南(翻译)
+# AngularJs 指令实践指南(译)
 * 出处：[sitepoint](https://www.sitepoint.com/practical-guide-angularjs-directives)
 
 指令（Directives）是所有AngularJs应用最重要的组件。尽管AngularJS自带了丰富的指令，但你会经常需要为应用程序创建特定的指令。这篇教程将概述自定义指令，以及介绍在实际项目中如何使用指令。教程最后，我会指导你通过Angular指令来创建一个简单的记事本APP。
@@ -69,4 +69,47 @@
 当匹配指令是，Angular从元素属性名中剔除前缀`x-`或者`data-`。然后将转换`-`或`:`分隔符转换成驼峰命名法，从而匹配注册的指令。这就是为什么我们在HTML中以`hello-world`的形式使用`helloWorld`指令。
 
 尽管上面的指令仅仅实现了静态文本的显示，但这里面还是有一些有意思的地方值得我们去发掘。在指令定义对象中，我们使用了三个属性来配置。下面我们逐一看一下他们的作用。
-* `restrict` – 它规定如何在HTML中使用指令（还记得一个指令的四种表现形式吗）。例子中我们设置为：`AE`。所以，可以作为新的元素或者一个元素属性来引入指令。如果希望使用class的形式引入指令，我们可以设置`restrict`为`AEC`。
+
+* `restrict` – 此属性规定如何在HTML中使用指令（还记得一个指令的四种表现形式吗）。例子中我们设置为：`'AE'`。所以，可以作为新的元素或者一个元素属性来引入指令。如果希望使用class的形式引入指令，我们可以设置`restrict`为`'AEC'`。
+* `template` – 此属性规定了指令被Angular编译（compile）和链接（link）后生成的HTML的样子。属性值可以不是一个简单的字符串。`template`可以很复杂，而且经常包含其他指令、表达式（`{{}}`）等等。在大多数情况下你会看到使用`templateUrl`替代`template`。所以，理想情况下你应该把模版放到单独的HTML文件中，然后使用`templateUrl`指向它。
+* `replace` – 此属性规定包含指令的HTML元素是否被生成的模板所替代。上述例子中我们用到了`<hello-world></hello-world>`指令，并且设置`replace`为`true`。所以在指令编译完成后，输出的模版会替换掉`<hello-world></hello-world>`。最终输出结果为`<h3>Hello World!</h3>`。如果设置`replace`为`false`（默认值），输出的模板会被插入到引入指令的元素中。
+
+打开这个[plunker](http://plnkr.co/edit/GKI339z2VDdZTOE2bGFP)，右键“Hello World!!”检查元素，可以很直观的看明白。
+
+## `link`函数和Scope
+
+通过指令生成的模板只有在正确的scope中编译才有意义。默认情况下，指令并不会创建一个新的子scope。更多的，它使用父级scope。如果这个指令在一个controller中，那么它会使用这个controller的scope。
+
+为了利用scope，我们可以使用`link`函数。它是由指令定义对象的`link`属性配置的。下面改写下我们的`helloWorld`指令，当用户在输入框输入颜色名字的时候，Hello World文本的背景色自动改变。并且，当用户点击Hello World时，背景颜色恢复到白色。HTML代码如下：
+
+    <body ng-controller="MainCtrl">
+        <input type="text" ng-model="color" placeholder="Enter a color"/>
+        <hello-world/>
+    </body>
+
+修改后的`helloWorld`指令如下：
+
+    app.directive('helloWorld', function(){
+        return {
+            restrict: 'AE',
+            replace: true,
+            template: '<p style="background-color:{{color}}">Hello World',
+            link: function(scope, elem, attrs){
+                elem.bind('click', function(){
+                    elem.css('background-color', 'white');
+                    scope.$apply(function(){
+                        scope.color = 'white';
+                    });
+                });
+                elem.bind('mouseover', function(){
+                    elem.css('cursor', 'pointer')
+                })
+            }
+        }
+    })
+
+注意指令中的`link`函数，它有三个参数：
+
+* `scope` – 指令所在scope。例子中，指令的scope就是父级controller的scope。
+* `elem` – 使用jQLite（jQuery子集）包装的指令所在的DOM元素。如果你在引入Angular之前引入了jQuery，这个对象会使用jQuery包装。所以在DOM操作时就不需要使用`$()`来包装。
+* `attrs` –
